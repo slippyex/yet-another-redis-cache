@@ -1,14 +1,13 @@
-import emoji from 'node-emoji';
 import { runShellCommand } from './lib/runShellCommand';
 
+const REDIS_TEST_PORT = 56379;
 export default async function globalSetup() {
     process.env.ENVIRONMENT = 'test';
 
-    process.env.NPM_DEBUG_LOGGER = 'true';
     process.env.LOG_LEVEL = process.env.LOG_LEVEL || 'error';
     process.env.DEBUG = process.env.DEBUG || 'rad:*';
 
-    process.env.REDIS_URL = 'redis://localhost:56379/2';
+    process.env.REDIS_URL = `redis://localhost:${REDIS_TEST_PORT}/2`;
 
     if (process.env.TEST_FAST !== 'true') {
         /* ---------------------------------- prep ---------------------------------- */
@@ -18,16 +17,12 @@ export default async function globalSetup() {
 
         /* -------------------------------- database -------------------------------- */
 
-        console.log('spinning up containers');
-        await runShellCommand(`docker run --name shared-test-redis -p 56379:6379 -d redis`);
+        console.log('spinning up redis instance container');
+        await runShellCommand(`docker run --name shared-test-redis -p ${REDIS_TEST_PORT}:6379 -d redis`);
     }
 
     /* ---------------------------------- done ---------------------------------- */
-    console.log(
-        `\nglobal setup completed! ${emoji.get('partying_face')} ${
-            process.env.TEST_FAST === 'true' ? `(fast mode ${emoji.get('racing_car')}  )` : ''
-        }`
-    );
+    console.log(`\nglobal setup completed! ${process.env.TEST_FAST === 'true' ? `(fast mode)` : ''}`);
 
     await new Promise(res => setTimeout(res, 1000));
 }

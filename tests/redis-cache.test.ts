@@ -1,4 +1,5 @@
 import { RedisCache } from '../src/';
+import * as process from 'process';
 
 async function waitMS(ms: number) {
     await new Promise(res => setTimeout(res, ms));
@@ -18,7 +19,6 @@ describe('Redis Cache testing', () => {
     afterAll(async () => {
         await redisCache.quit();
     });
-
 
     test('checks that a value has been set and can be retrieved', async () => {
         await redisCache.set('key1', 'test1');
@@ -88,6 +88,40 @@ describe('Redis Cache testing', () => {
         });
     });
 
+    test('checks that bulk setting values without expiry works', async () => {
+        const bulkSetObject = {
+            'kserie-5': 50,
+            'kserie-6': 60,
+            'kserie-7': 70,
+            'kserie-8': 80
+        };
+        const ownRedisCache = new RedisCache(process.env.REDIS_URL);
+        await ownRedisCache.setBulk(bulkSetObject);
+        expect(await ownRedisCache.getBulk(Object.keys(bulkSetObject))).toStrictEqual(bulkSetObject);
+        await ownRedisCache.deleteBulk(Object.keys(bulkSetObject));
+        await ownRedisCache.quit();
+    });
+
+    test('check that setting a single value without expiry works', async () => {
+        const ownRedisCache = new RedisCache(process.env.REDIS_URL);
+        await ownRedisCache.set('test-single', 'value');
+        await ownRedisCache.set('test-array', [1, 2, 3, 4]);
+        expect(await ownRedisCache.get('test-single')).toBe('value');
+        expect(await ownRedisCache.get('test-array')).toStrictEqual([1, 2, 3, 4]);
+
+        await ownRedisCache.set('test-exp-single', 'value', { expiryInSeconds: 1 });
+        await ownRedisCache.set('test-exp-array', [1, 2, 3, 4], { expiryInSeconds: 1 });
+        expect(await ownRedisCache.get('test-exp-single')).toBe('value');
+        expect(await ownRedisCache.get('test-exp-array')).toStrictEqual([1, 2, 3, 4]);
+        await waitMS(1000);
+        expect(await ownRedisCache.get('test-exp-single')).toBeNull();
+        expect(await ownRedisCache.get('test-exp-array')).toBeNull();
+
+        await ownRedisCache.delete('test-single');
+        await ownRedisCache.delete('test-array');
+        await ownRedisCache.quit();
+    });
+
     test('check that data type wrapping/unwrapping works', async () => {
         await redisCache.set('string-test', 'apparently a string');
         await redisCache.set('number-test', 100);
@@ -132,5 +166,19 @@ describe('Redis Cache testing', () => {
 
         const keys = await redisCache.keys();
         expect(keys).toHaveLength(8);
+    });
+
+    test('check that connection is quit correctly', async () => {
+        await redisCache.connect();
+        expect(redisCache.isOpen()).toBeTruthy();
+        await redisCache.quit();
+        expect(redisCache.isOpen()).toBeFalsy();
+    });
+
+    test('check that connection is quit correctly', async () => {
+        await redisCache.connect();
+        expect(redisCache.isOpen()).toBeTruthy();
+        await redisCache.disconnect();
+        expect(redisCache.isOpen()).toBeFalsy();
     });
 });

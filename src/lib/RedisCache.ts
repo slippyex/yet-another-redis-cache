@@ -16,11 +16,19 @@ export class RedisCache {
         this.extendExpiryOnTouch = (options || {}).extendExpiryOnTouch;
     }
 
+    isOpen(): boolean {
+        return this.client.isOpen;
+    }
+
     /**
      * disconnect from Redis server
      */
+    async connect(): Promise<void> {
+        if (!this.isOpen()) await this.client.connect();
+    }
+
     async disconnect(): Promise<void> {
-        if (this.client.isOpen) await this.client.disconnect();
+        if (this.isOpen()) await this.client.disconnect();
     }
 
     /**
@@ -28,7 +36,7 @@ export class RedisCache {
      *
      */
     async quit(): Promise<void> {
-        if (this.client.isOpen) {
+        if (this.isOpen()) {
             await this.client.quit();
         }
     }
@@ -39,7 +47,7 @@ export class RedisCache {
      * @param pattern
      */
     @assureOpenConnection()
-    async keys(pattern: string = '*'): Promise<string[]> {
+    async keys(pattern = '*'): Promise<string[]> {
         return this.client.keys(pattern);
     }
 
@@ -85,13 +93,11 @@ export class RedisCache {
         await this.client.executeIsolated(async isolatedClient => {
             const multi = isolatedClient.multi();
             Object.keys(keyVals).map(key => {
-                const dataType = this.determineDataType(keyVals[key]);
-                const wrappedValue =
-                    dataType.endsWith('[]') || dataType === 'object' ? JSON.stringify(keyVals[key]) : keyVals[key];
+                const { dataType, wrappedValue } = this.wrapValue(keyVals[key]);
 
                 if ((options || {}).expiryInSeconds || this.ttl > 0) {
                     multi.set(this.wrapKey(key, (options || {}).subGroupPrefix), `${dataType}::${wrappedValue}`, {
-                        EX: (options || {}).expiryInSeconds ? (options || {}).expiryInSeconds : this.ttl
+                        EX: (options || {}).expiryInSeconds ? options.expiryInSeconds : this.ttl
                     });
                 } else {
                     multi.set(this.wrapKey(key, (options || {}).subGroupPrefix), `${dataType}::${wrappedValue}`);
@@ -110,12 +116,11 @@ export class RedisCache {
      */
     @assureOpenConnection()
     async set(key: string, value: CacheValueType, options?: ICacheSetOptions): Promise<void> {
-        const dataType = this.determineDataType(value);
-        const wrappedValue = dataType.endsWith('[]') || dataType === 'object' ? JSON.stringify(value) : value;
+        const { dataType, wrappedValue } = this.wrapValue(value);
 
         if ((options || {}).expiryInSeconds || this.ttl > 0) {
             await this.client.set(this.wrapKey(key, (options || {}).subGroupPrefix), `${dataType}::${wrappedValue}`, {
-                EX: (options || {}).expiryInSeconds ? (options || {}).expiryInSeconds : this.ttl
+                EX: (options || {}).expiryInSeconds ? options.expiryInSeconds : this.ttl
             });
         } else {
             await this.client.set(this.wrapKey(key, (options || {}).subGroupPrefix), `${dataType}::${wrappedValue}`);
@@ -179,15 +184,19 @@ export class RedisCache {
             subGroupPrefix ? subGroupPrefix + ':' : ''
         }${key}`;
     }
+
+    private wrapValue(value: CacheValueType): { dataType: string; wrappedValue: string | number | boolean | object } {
+        const dataType = this.determineDataType(value);
+        const wrappedValue = dataType.endsWith('[]') || dataType === 'object' ? JSON.stringify(value) : value;
+        return { dataType, wrappedValue };
+    }
 }
 
 function assureOpenConnection() {
     return function (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
         const targetMethod = descriptor.value;
         descriptor.value = async function (...args: unknown[]) {
-            if (!this.client.isOpen) {
-                await this.client.connect();
-            }
+            await this.connect();
             return targetMethod.apply(this, args);
         };
         return descriptor;
