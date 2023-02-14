@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/yet-another-redis-cache.svg)](https://badge.fury.io/js/yet-another-redis-cache)
+
 # YET ANOTHER REDIS CACHE
 
 As the name implies, this is yet another (booooring) Redis-backed cache. However, this is not completely true.
