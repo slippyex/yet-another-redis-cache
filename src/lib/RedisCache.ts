@@ -1,5 +1,5 @@
 import { createClient, RedisClientType } from 'redis';
-import { CacheValueType, ICacheSetOptions } from '../@types';
+import { CacheValueType, ICacheSetOptions } from '../@types/cache';
 
 export class RedisCache {
     private readonly client: RedisClientType;

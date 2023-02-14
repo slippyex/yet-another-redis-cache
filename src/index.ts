@@ -1,5 +1,5 @@
 export * from './lib/RedisCache';
-export * from './@types';
+export { CacheValueType, ICacheSetOptions } from './@types/cache';
 
 // (async () => {
 //
