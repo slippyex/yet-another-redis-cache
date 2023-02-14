@@ -14,3 +14,4 @@ jobs:
           version: 20.10.14
 orbs:
   node: circleci/node@4.7.0
+  docker: circleci/docker@2.2.0
