@@ -5,7 +5,6 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/base:2023.02
       - image: redis
     resource_class: small
     steps:
