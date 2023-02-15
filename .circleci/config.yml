@@ -5,13 +5,16 @@ jobs:
     docker:
       - image: cimg/base:2022.06
     steps:
-      - checkout
+      - run:
+          sudo apt-get install -y docker
       - node/install-packages:
           pkg-manager: yarn
       - run:
           command: yarn test
-      - setup_remote_docker:
-          version: 20.10.14
 orbs:
   node: circleci/node@4.7.0
-  docker: circleci/docker@2.2.0
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
