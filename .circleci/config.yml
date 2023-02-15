@@ -2,10 +2,12 @@
 version: 2.1
 orbs:
   node: circleci/node@5.1.0
+  codecov: codecov/codecov@3
+
 jobs:
   build:
     docker:
-      - image: cimg/base:2023.02 
+      - image: cimg/base:2023.02
       - image: redis
     resource_class: small
     steps:
@@ -17,6 +19,7 @@ jobs:
           command: yarn install
       - run:
           command: yarn test:ci
+      - codecov/upload
 workflows:
   version: 2
   build_and_test:
