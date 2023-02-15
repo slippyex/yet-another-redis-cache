@@ -12,13 +12,10 @@ jobs:
     steps:
       - setup_remote_docker:
           version: 20.10.14
-      - docker/install-docker-tools
       - checkout
       - node/install:
           install-yarn: true
           node-version: '16.13'
-      - run:
-          command: sudo apt-get install -y redis-tools
       - run:
           command: yarn install
       - run:
