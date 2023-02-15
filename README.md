@@ -1,5 +1,6 @@
-[![npm version](https://badge.fury.io/js/yet-another-redis-cache.svg)](https://badge.fury.io/js/yet-another-redis-cache)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/slippyex/yet-another-redis-cache)
 ![CircleCI](https://img.shields.io/circleci/build/github/slippyex/yet-another-redis-cache?token=ba478c59b1d3cd57063d50260f1747f4a2961705)
+![NPM](https://img.shields.io/npm/l/yet-another-redis-cache)
 # YET ANOTHER REDIS CACHE
 
 As the name implies, this is yet another (booooring) Redis-backed cache. However, this is not completely true.
