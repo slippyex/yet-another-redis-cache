@@ -11,7 +11,9 @@ export default async function globalSetup() {
 
     if (process.env.TEST_FAST !== 'true') {
         /* ---------------------------------- prep ---------------------------------- */
-
+        console.log('\ntrying to pull docker redis image...');
+        await runShellCommand(`docker pull redis`);
+        
         console.log('\ndropping existing containers...');
         await Promise.all([runShellCommand(`docker rm shared-test-redis --force || true`, { ignoreError: true })]);
 
