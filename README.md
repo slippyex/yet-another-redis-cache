@@ -1,7 +1,7 @@
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/slippyex/yet-another-redis-cache)
-![CircleCI](https://img.shields.io/circleci/build/github/slippyex/yet-another-redis-cache?token=ba478c59b1d3cd57063d50260f1747f4a2961705)
 ![NPM](https://img.shields.io/npm/l/yet-another-redis-cache)
-
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/slippyex/yet-another-redis-cache/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/slippyex/yet-another-redis-cache/tree/main)
+[![codecov](https://codecov.io/gh/slippyex/yet-another-redis-cache/branch/main/graph/badge.svg?token=B1NTASVMHG)](https://codecov.io/gh/slippyex/yet-another-redis-cache)
 # YET ANOTHER REDIS CACHE
 
 As the name implies, this is yet another (booooring) Redis-backed cache. However, this is not completely true.
@@ -47,7 +47,6 @@ comes in, we can create a single-transaction cache lookup with the following cod
 ```typescript
   const cachedResults = await redisCache.getBulk(['identifier-2', 'identifier-3', 'identifier-10']);
 ```
-
 The `cachedResults` will look like the following:
 ```json
   {
@@ -57,6 +56,18 @@ The `cachedResults` will look like the following:
   }
 ```
 Allowing you to retrieve the result for `identifier-10`, cache and return the whole set
+
+
+Besides the two bulk getter/setter, you can also use the regular get/set like
+
+```typescript
+  await redisCache.set('regular-key', {'test': true});
+  ...
+  ...
+  const cachedValue: { test: boolean } = await redisCache.get('regular-key');
+```
+
+Additionally to the getter/setter, we can also `delete(key: string)` and `deleteBulk(keys: string[])` explicit elements from the cache or get a list of keys with a certain pattern by calling `await redisCache.keys('my-pattern*')` for example.
 
 ### Run tests
 ```bash
