@@ -6,9 +6,9 @@ orbs:
 
 jobs:
   build:
-    executor:
-      name: docker/docker
-      tag: '3.6'
+    docker:
+      - image: cimg/base:2023.02
+      - image: cimg/redis:6.2.6
     steps:
       - setup_remote_docker:
           version: 20.10.14
@@ -17,8 +17,6 @@ jobs:
       - node/install:
           install-yarn: true
           node-version: '16.13'
-      - run:
-          command: sudo apt-get install -y redis
       - run:
           command: yarn install
       - run:
