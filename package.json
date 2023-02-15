@@ -19,6 +19,7 @@
     "docs:clean": "rm -rf ./docs",
     "docker:flush": "redis-cli -h localhost -p 56379 flushall || true",
     "test": "yarn docker:flush && jest --runInBand --detectOpenHandles --coverage=true",
+    "test:ci": "jest --runInBand --detectOpenHandles --coverage=true",
     "test:fast": "yarn docker:flush && TEST_FAST=true jest --runInBand --detectOpenHandles --coverage=false"
   },
   "author": "Markus Velten",
