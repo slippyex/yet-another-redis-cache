@@ -18,6 +18,8 @@ jobs:
           install-yarn: true
           node-version: '16.13'
       - run:
+          command: sudo apt-get install -y redis
+      - run:
           command: yarn install
       - run:
           command: yarn test
