@@ -7,11 +7,9 @@ jobs:
     steps:
       - checkout
       - run:
-          command: npm install --global yarn
-      - node/install-packages:
-          pkg-manager: yarn
+          command: npm install
       - run:
-          command: yarn test
+          command: npm run test
 orbs:
   node: circleci/node@5.0.2
 workflows:
