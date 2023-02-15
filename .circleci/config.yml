@@ -2,16 +2,13 @@
 version: 2.1
 orbs:
   node: circleci/node@5.1.0
-  docker: circleci/docker@2.2.0
-
 jobs:
   build:
     docker:
       - image: cimg/base:2023.02
       - image: redis
+    resource_class: small
     steps:
-      - setup_remote_docker:
-          version: 20.10.14
       - checkout
       - node/install:
           install-yarn: true
