@@ -2,15 +2,16 @@
 version: 2.1
 orbs:
   node: circleci/node@5.1.0
+  docker: circleci/docker@2.2.0
 
 jobs:
   build:
-    docker:
-      - image: 'cimg/base:2023.02'
+    executor:
+      name: docker/docker
+      tag: '3.6'
     steps:
+      - docker/install-docker-tools
       - checkout
-      - run:
-          command: sudo apt-get -y install docker 
       - node/install:
           install-yarn: true
           node-version: '16.13'
