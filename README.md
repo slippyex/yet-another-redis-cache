@@ -1,5 +1,5 @@
 [![npm version](https://badge.fury.io/js/yet-another-redis-cache.svg)](https://badge.fury.io/js/yet-another-redis-cache)
-
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/slippyex/yet-another-redis-cache/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/slippyex/yet-another-redis-cache/tree/main)
 # YET ANOTHER REDIS CACHE
 
 As the name implies, this is yet another (booooring) Redis-backed cache. However, this is not completely true.
