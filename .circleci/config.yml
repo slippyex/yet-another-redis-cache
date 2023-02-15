@@ -10,6 +10,8 @@ jobs:
       name: docker/docker
       tag: '3.6'
     steps:
+      - setup_remote_docker:
+          version: 20.10.14
       - docker/install-docker-tools
       - checkout
       - node/install:
