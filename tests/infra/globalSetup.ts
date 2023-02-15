@@ -1,6 +1,6 @@
 import { runShellCommand } from './lib/runShellCommand';
 
-const REDIS_TEST_PORT = 56379;
+const REDIS_TEST_PORT = process.env.CI ? 6379 : 56379;
 export default async function globalSetup() {
     process.env.ENVIRONMENT = 'test';
 
@@ -9,18 +9,20 @@ export default async function globalSetup() {
 
     process.env.REDIS_URL = `redis://localhost:${REDIS_TEST_PORT}/2`;
 
-    if (process.env.TEST_FAST !== 'true') {
-        /* ---------------------------------- prep ---------------------------------- */
-        console.log('\ntrying to pull docker redis image...');
-        await runShellCommand(`docker pull redis`);
-        
-        console.log('\ndropping existing containers...');
-        await Promise.all([runShellCommand(`docker rm shared-test-redis --force || true`, { ignoreError: true })]);
+    if (!process.env.CI) {
+        if (process.env.TEST_FAST !== 'true') {
+            /* ---------------------------------- prep ---------------------------------- */
+            console.log('\ntrying to pull docker redis image...');
+            await runShellCommand(`docker pull redis`);
 
-        /* -------------------------------- database -------------------------------- */
+            console.log('\ndropping existing containers...');
+            await Promise.all([runShellCommand(`docker rm shared-test-redis --force || true`, { ignoreError: true })]);
 
-        console.log('spinning up redis instance container');
-        await runShellCommand(`docker run --name shared-test-redis -p ${REDIS_TEST_PORT}:6379 -d redis`);
+            /* -------------------------------- database -------------------------------- */
+
+            console.log('spinning up redis instance container');
+            await runShellCommand(`docker run --name shared-test-redis -p ${REDIS_TEST_PORT}:6379 -d redis`);
+        }
     }
 
     /* ---------------------------------- done ---------------------------------- */
