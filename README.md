@@ -9,6 +9,9 @@ In fact, it has some useful, not seen, functionality which I wanted to leverage 
 And since I didn't find the features, I decided to release this as another npm package, trying to 
 give back to the OS community.
 
+### Documentation
+[TSDOC pages](https://slippyex.github.io/yet-another-redis-cache/)
+
 ### Intro
 So, long story short, the purpose of this package is ... guess what ... caching. Therefore, you will 
 find the regular get/set methods plus some minimal options. Details to follow below.
