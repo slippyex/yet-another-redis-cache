@@ -102,6 +102,20 @@ describe('Redis Cache testing', () => {
         await ownRedisCache.quit();
     });
 
+    test('check to connect with options', async () => {
+        const ownRedisCache = new RedisCache({
+            connection: {
+                host: process.env.REDIS_URL.split('//')[1].split(':')[0],
+                port: parseInt(process.env.REDIS_URL.split('//')[1].split(':')[1], 10),
+                db: parseInt(process.env.REDIS_URL.split('//')[1].split('/')[1], 10)
+            }
+        });
+        await ownRedisCache.set('test-key', 'test-val');
+        expect(await ownRedisCache.get('test-key')).toBe('test-val');
+        await ownRedisCache.delete('test-key');
+        await ownRedisCache.quit();
+    });
+
     test('check that setting a single value without expiry works', async () => {
         const ownRedisCache = new RedisCache(process.env.REDIS_URL);
         await ownRedisCache.set('test-single', 'value');

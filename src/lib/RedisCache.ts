@@ -1,19 +1,56 @@
 import { createClient, RedisClientType } from 'redis';
-import { CacheValueType, ICacheSetOptions } from '../@types/cache';
+import { CacheValueType, ICacheSetOptions, IRedisConnection, IRedisConnectionOptions } from '../@types/cache';
 
 export class RedisCache {
     private readonly client: RedisClientType;
     private readonly ttl: number;
-    private readonly extendExpiryOnTouch: boolean;
     private readonly groupKeyPrefix: string;
     private readonly url: string;
-
-    constructor(url: string, options?: { ttl?: number; extendExpiryOnTouch?: boolean; groupKeyPrefix?: string }) {
-        this.client = createClient({ url });
-        this.url = url;
+    private readonly isLRU: boolean;
+    private readonly maxLRU: number;
+    constructor(url: string);
+    constructor(options: IRedisConnectionOptions);
+    constructor(url: string, options: IRedisConnectionOptions);
+    constructor(...arr: (string | IRedisConnectionOptions)[]) {
+        const { url, options } = RedisCache.extractSignature(...arr);
+        this.url = url || RedisCache.buildUrl(options.connection);
+        this.client = (options || {}).poolOptions
+            ? createClient({ url: this.url, isolationPoolOptions: options.poolOptions })
+            : createClient({ url: this.url });
         this.groupKeyPrefix = (options || {}).groupKeyPrefix || null;
         this.ttl = (options || {}).ttl || -1;
-        this.extendExpiryOnTouch = (options || {}).extendExpiryOnTouch;
+        this.isLRU = (options || {}).lru && (options || {}).lru.max > 0;
+        this.maxLRU = (options || {}).lru ? (options || {}).lru.max : 0;
+    }
+
+    private static extractSignature(...arr: (string | IRedisConnectionOptions)[]): {
+        url: string;
+        options: IRedisConnectionOptions;
+    } {
+        let options: IRedisConnectionOptions;
+        let url: string;
+        if (arr.length === 2) {
+            url = arr[0] as string;
+            options = arr[1] as IRedisConnectionOptions;
+        } else if (arr.length === 1 && typeof arr[0] === 'string') {
+            url = arr[0];
+        } else {
+            options = arr[0] as IRedisConnectionOptions;
+        }
+        if (!url && !(options || {}).connection)
+            throw new Error('RedisCache: url or options.connection must be provided');
+        if (url && (options || {}).connection)
+            throw new Error('RedisCache: url and options.connection cannot be provided together');
+
+        return {
+            url: url || RedisCache.buildUrl(options.connection),
+            options: options || {}
+        };
+    }
+    private static buildUrl(connection: IRedisConnection): string {
+        const { host, port, password, db, username } = connection;
+        const url = `redis://${username || ''}${password ? `:${password}` : ''}${username ? '@' : ''}${host}:${port}`;
+        return db ? `${url}/${db}` : url;
     }
 
     isOpen(): boolean {
@@ -90,6 +127,9 @@ export class RedisCache {
      */
     @assureOpenConnection()
     async setBulk(keyVals: Record<string, CacheValueType>, options?: ICacheSetOptions): Promise<void> {
+        if (this.isLRU && Object.keys(keyVals).length > this.maxLRU) {
+            throw new Error('RedisCache: amount of keys to set exceeds max LRU size');
+        }
         await this.client.executeIsolated(async isolatedClient => {
             const multi = isolatedClient.multi();
             Object.keys(keyVals).map(key => {
