@@ -13,7 +13,7 @@ export class RedisCache {
     constructor(url: string, options: IRedisConnectionOptions);
     constructor(...arr: (string | IRedisConnectionOptions)[]) {
         const { url, options } = RedisCache.extractSignature(...arr);
-        this.url = url || RedisCache.buildUrl(options.connection);
+        this.url = url;
         this.client = (options || {}).poolOptions
             ? createClient({ url: this.url, isolationPoolOptions: options.poolOptions })
             : createClient({ url: this.url });
@@ -21,36 +21,6 @@ export class RedisCache {
         this.ttl = (options || {}).ttl || -1;
         this.isLRU = (options || {}).lru && (options || {}).lru.max > 0;
         this.maxLRU = (options || {}).lru ? (options || {}).lru.max : 0;
-    }
-
-    private static extractSignature(...arr: (string | IRedisConnectionOptions)[]): {
-        url: string;
-        options: IRedisConnectionOptions;
-    } {
-        let options: IRedisConnectionOptions;
-        let url: string;
-        if (arr.length === 2) {
-            url = arr[0] as string;
-            options = arr[1] as IRedisConnectionOptions;
-        } else if (arr.length === 1 && typeof arr[0] === 'string') {
-            url = arr[0];
-        } else {
-            options = arr[0] as IRedisConnectionOptions;
-        }
-        if (!url && !(options || {}).connection)
-            throw new Error('RedisCache: url or options.connection must be provided');
-        if (url && (options || {}).connection)
-            throw new Error('RedisCache: url and options.connection cannot be provided together');
-
-        return {
-            url: url || RedisCache.buildUrl(options.connection),
-            options: options || {}
-        };
-    }
-    private static buildUrl(connection: IRedisConnection): string {
-        const { host, port, password, db, username } = connection;
-        const url = `redis://${username || ''}${password ? `:${password}` : ''}${username ? '@' : ''}${host}:${port}`;
-        return db ? `${url}/${db}` : url;
     }
 
     isOpen(): boolean {
@@ -229,6 +199,36 @@ export class RedisCache {
         const dataType = this.determineDataType(value);
         const wrappedValue = dataType.endsWith('[]') || dataType === 'object' ? JSON.stringify(value) : value;
         return { dataType, wrappedValue };
+    }
+
+    private static extractSignature(...arr: (string | IRedisConnectionOptions)[]): {
+        url: string;
+        options: IRedisConnectionOptions;
+    } {
+        let options: IRedisConnectionOptions;
+        let url: string;
+        if (arr.length === 2) {
+            url = arr[0] as string;
+            options = arr[1] as IRedisConnectionOptions;
+        } else if (arr.length === 1 && typeof arr[0] === 'string') {
+            url = arr[0];
+        } else {
+            options = arr[0] as IRedisConnectionOptions;
+        }
+        if (!url && !(options || {}).connection)
+            throw new Error('RedisCache: url or options.connection must be provided');
+        if (url && (options || {}).connection)
+            throw new Error('RedisCache: url and options.connection cannot be provided together');
+
+        return {
+            url: url || RedisCache.buildUrl(options.connection),
+            options: options || {}
+        };
+    }
+    private static buildUrl(connection: IRedisConnection): string {
+        const { host, port, password, db, username } = connection;
+        const url = `redis://${username || ''}${password ? `:${password}` : ''}${username ? '@' : ''}${host}:${port}`;
+        return db ? `${url}/${db}` : url;
     }
 }
 
